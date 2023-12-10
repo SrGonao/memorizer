@@ -1,11 +1,11 @@
 import numpy as np
-
+import torch as t
 
 class DataLoader:
-    def __init__(self, data_path, batch_size, seq_length,overlap):
-        self.batch_size = batch_size
+    def __init__(self, data_path, seq_length,digits):
         self.seq_length = seq_length
-        self.overlap = overlap
+        
+        self.digits = digits
 
         # Load data
         data = open(data_path, 'r').read()
@@ -14,8 +14,8 @@ class DataLoader:
         print('data has %d characters, %d unique.' % (data_size, vocab_size))
 
         # Create dictionaries
-        self.char_to_ix = {ch: i for i, ch in enumerate(chars)}
-        self.ix_to_char = {i: ch for i, ch in enumerate(chars)}
+        self.char_to_ix = {"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,".":10}
+        self.ix_to_char = {0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"."}
 
         # Convert data to indices
         self.data = [self.char_to_ix[ch] for ch in data]
@@ -23,35 +23,38 @@ class DataLoader:
 
         # Create overlapping sequences
         self.x_batches = []
-        self.y_batches = []
-        for i in range(0, self.data.size - self.seq_length, self.overlap):
-            if i + self.batch_size * self.seq_length > self.data.size:
-                break
-            x = [self.data[i+j*self.seq_length:i+(j+1)*self.seq_length] for j in range(self.batch_size)]
-            y = [self.data[i+j*self.seq_length+1:i+(j+1)*self.seq_length+1] for j in range(self.batch_size)]
+        #self.y_batches = []
+        for i in range(0, self.digits - self.seq_length, self.seq_length//4):
+            x = self.data[i:i + self.seq_length]
+            #y = self.data[i+1:i+1 + self.seq_length]
             self.x_batches.append(x)
-            self.y_batches.append(y)
+            #self.y_batches.append(y)
+
+        
         
         
         self.num_batches = len(self.x_batches)
         self.x_batches = np.array(self.x_batches)
-        self.y_batches = np.array(self.y_batches)
+        
 
         self.pointer = 0
 
-    def next_batch(self):
-        x, y = self.x_batches[self.pointer], self.y_batches[self.pointer]
+    def __iter__(self):
+        self.pointer = 0
+        return self
+    
+    def __next__(self):
+        if self.pointer >= self.num_batches:
+            raise StopIteration
+        x = self.x_batches[self.pointer]
+        #y = self.y_batches[self.pointer]
         self.pointer += 1
-        return x, y
-
-    def reset_batch_pointer(self):
-        self.pointer = 0
+        x = t.tensor(x, dtype=t.long).unsqueeze(0)
+        #y = t.tensor(y, dtype=t.long).unsqueeze(0)
+        
+        return x
 
 
 if __name__ == '__main__':
-    data_loader = DataLoader('pi.dat', 50, 50,5)
-    x, y = data_loader.next_batch()
-    print(x.shape, y.shape)
-    print(x[0, :10])
-    print(y[0, :10])
-    print(data_loader.num_batches)
+    data_loader = DataLoader('pi.dat', 50,100)
+  
