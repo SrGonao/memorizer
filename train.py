@@ -5,7 +5,6 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 import data_loader
-
 class MemorizerTrainingArgs:
     seq_length: int = 20
     digits : int = 100000
@@ -43,6 +42,8 @@ class Memorize_Trainer:
         
         
         logits = self.model(input)
+        if isinstance(logits, tuple):
+            logits = logits.logits
         loss = get_log_probs(logits, batch)
         
         loss.backward()
@@ -57,6 +58,8 @@ class Memorize_Trainer:
         input = batch[:,:-1]
         
         outputs = self.model(input)
+        if isinstance(outputs, tuple):
+            outputs = outputs.logits
         predicted = t.argmax(outputs, dim=-1)
         
         correct = (predicted[0][10:] == batch[0][11:]).flatten()

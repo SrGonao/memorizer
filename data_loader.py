@@ -59,6 +59,10 @@ class DataLoader:
         x = self.shuffled[self.pointer]
         #y = self.y_batches[self.pointer]
         self.pointer += 1
+        #x_to_one_hot = np.zeros((len(self.char_to_ix),self.seq_length ))
+        #for i in range(len(x)):
+        #    x_to_one_hot[x[i]][i] = 1
+    
         x = t.tensor(x, dtype=t.long).unsqueeze(0).cuda()
         #y = t.tensor(y, dtype=t.long).unsqueeze(0)
         
