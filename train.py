@@ -9,7 +9,7 @@ class MemorizerTrainingArgs:
     seq_length: int = 20
     digits : int = 100000
     epochs : int = 1000
-    max_steps_per_epoch = 1000
+    max_steps_per_epoch = 10000
     data_loader = data_loader.DataLoader('pi.dat', seq_length,digits)
     lr = 0.00001
     wandb_project = "memorizer"
@@ -86,6 +86,10 @@ class Memorize_Trainer:
 
             correct_predictions = t.concat([self.validation_step(batch) for batch in batches])
             accuracy = correct_predictions.float().mean().item()
+            if accuracy == 1:
+                self.args.data_loader.num_batches = self.args.data_loader.num_batches*2
+                self.args.data_loader.pointer = self.args.data_loader.pointer=0
+                epoch = 0
             self.scheduler.step()
             #print(accuracy)
             wandb.log({"accuracy": accuracy}, step=self.step)
@@ -93,7 +97,7 @@ class Memorize_Trainer:
         wandb.finish()
     
     def train_loader(self,seed):
-        self.data_loader.shuffle(seed)
+        #self.data_loader.shuffle(seed)
         return iter(self.data_loader)
  
 
